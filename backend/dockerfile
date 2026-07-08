@@ -1,0 +1,11 @@
+FROM node:latest
+
+WORKDIR /api-cotahub
+
+COPY . . 
+
+RUN npm install
+
+EXPOSE 3000
+
+CMD ["node","src/index.js"]

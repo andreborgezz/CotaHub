@@ -1,0 +1,9 @@
+version: '3.8'
+services:
+  web:
+    build: .
+    container_name: cotahub-api
+    ports:
+      - "3000:3000"
+    volumes:
+     - .:/api-cotahub
