@@ -1,26 +1,21 @@
 const express = require('express');
-const axios = require('axios');
 const cors = require('cors'); 
-const dotenv = require('dotenv');
-
-// Carrega o .env antes de qualquer outra coisa
-dotenv.config();
-
-// Importa o pool do arquivo database.js que está na mesma pasta
-const pool = require('./database');
+const { Pool } = require('pg');
 
 const app = express();
 
-// CORREÇÃO: O cors é uma função que deve ser passada dentro de app.use()
 app.use(cors());
-app.use(express.json()); // Importante para o seu CRUD ler JSON no req.body!
+app.use(express.json());
 
-// Trata erros que possam acontecer no banco em segundo plano para não derrubar o Node
-pool.on('error', (err) => {
-    console.error('Erro inesperado no cliente do banco:', err.message);
+// Colocando as credenciais direto aqui para isolar o problema do .env
+const pool = new Pool({
+    host: 'localhost',
+    port: 5434,
+    user: 'cota-db',
+    password: 'cota-db123',
+    database: 'cota-db'
 });
 
-// 1. ROTA DE TESTE DO BANCO
 app.get('/teste-db', async (req, res) => {
     try {
         const resultado = await pool.query('SELECT NOW()');
@@ -28,6 +23,10 @@ app.get('/teste-db', async (req, res) => {
     } catch (erro) {
         res.status(500).json({ conectado: false, erro: erro.message });
     }
+});
+
+app.listen(3000, () => {
+    console.log("backend rodando na porta 3000 - AGORA VAI");
 });
 
 // 2. ROTA GERAL DE COTAÇÕES
@@ -88,9 +87,4 @@ app.put('/api/usuarios/:id', async (req, res) => {
     } catch(erro) {
         res.status(500).json({ erro: 'Erro ao atualizar senha: ' + erro.message });
     }
-});
-
-// Inicialização do servidor
-app.listen(3000, () => {
-    console.log("backend rodando na porta 3000");
 });

@@ -1,5 +1,5 @@
 //importando as dependencias
-require('dotenv').config();
+// require('dotenv').config();
 const{ Pool } = require('pg');
 
 //pegando as variaveis de ambiente do arquivo .env e colocando em variaveis
