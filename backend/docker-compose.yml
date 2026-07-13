@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   web:
     build: .
@@ -6,4 +7,21 @@ services:
     ports:
       - "3000:3000"
     volumes:
-     - .:/api-cotahub
+      - .:/api-cotahub
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16
+    container_name: cota-db
+    environment:
+      POSTGRES_USER: cota-db
+      POSTGRES_PASSWORD: cota-db123
+      POSTGRES_DB: cota-db
+    ports:
+      - "5434:5432"
+    volumes:
+      - cota_data:/var/lib/postgresql/data
+
+volumes:
+  cota_data:

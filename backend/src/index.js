@@ -1,118 +1,96 @@
 const express = require('express');
 const axios = require('axios');
-const cors = require('cors') // liberando acesso das rotas
+const cors = require('cors'); 
+const dotenv = require('dotenv');
+
+// Carrega o .env antes de qualquer outra coisa
+dotenv.config();
+
+// Importa o pool do arquivo database.js que está na mesma pasta
+const pool = require('./database');
 
 const app = express();
-app.use = (cors());
 
-//rota para todas as cotações
-//    /api/cotacoes/geral
-app.get('/api/cotacoes/geral', async(req,res) => {
-    try{
-        const resposta = await axios.get('https://br.dolarapi.com/v1/cotacoes');
-        
-        res.json(resposta.data);
-} catch(erro) {
-        res.status(500).json({erro: 'Erro ao consultar cotações'})
+// CORREÇÃO: O cors é uma função que deve ser passada dentro de app.use()
+app.use(cors());
+app.use(express.json()); // Importante para o seu CRUD ler JSON no req.body!
+
+// Trata erros que possam acontecer no banco em segundo plano para não derrubar o Node
+pool.on('error', (err) => {
+    console.error('Erro inesperado no cliente do banco:', err.message);
+});
+
+// 1. ROTA DE TESTE DO BANCO
+app.get('/teste-db', async (req, res) => {
+    try {
+        const resultado = await pool.query('SELECT NOW()');
+        res.json({ conectado: true, hora_banco: resultado.rows[0].now });
+    } catch (erro) {
+        res.status(500).json({ conectado: false, erro: erro.message });
     }
 });
 
+// 2. ROTA GERAL DE COTAÇÕES
+app.get('/api/cotacoes/general', async(req, res) => {
+    try {
+        const resposta = await axios.get('https://br.dolarapi.com/v1/cotacoes');
+        res.json(resposta.data);
+    } catch(erro) {
+        res.status(500).json({ erro: 'Erro ao consultar cotações' });
+    }
+});
 
-// rota DOLAR: 
-app.get('/api/cotacoes/dolar', async(req,res) => {
-    try{
+// 3. ROTA DOLAR
+app.get('/api/cotacoes/dolar', async(req, res) => {
+    try {
         const resposta = await axios.get('https://br.dolarapi.com/v1/cotacoes/usd');
-
         res.json({
-        "moeda": resposta.data.moeda,
-        "nome": resposta.data.nome,
-        "compra": resposta.data.compra,
-        "venda": resposta.data.venda,
-        "fechoAnterior": resposta.data.fechoAnterior,
-        "dataAtualizacao": new Date(resposta.data.dataAtualizacao).toLocaleString('pt-BR', {timeZone: 'America/Sao_Paulo'}) 
-        //formatando a data pra voltar como: "08/07/2026, 11:02:00"
+            "moeda": resposta.data.moeda,
+            "nome": resposta.data.nome,
+            "compra": resposta.data.compra,
+            "venda": resposta.data.venda,
+            "fechoAnterior": resposta.data.fechoAnterior,
+            "dataAtualizacao": new Date(resposta.data.dataAtualizacao).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }) 
         });
     } catch(erro) {
-        res.status(500).json({erro: 'Erro ao consultar cotação: Dolar $'})
-}
+        res.status(500).json({ erro: 'Erro ao consultar cotação: Dolar $' });
+    }
 });
 
-// rota EURO: 
-app.get('/api/cotacoes/euro', async(req,res) => {
-    try{
-        const resposta = await axios.get('https://br.dolarapi.com/v1/cotacoes/eur');
-
-        res.json({
-        "moeda": resposta.data.moeda,
-        "nome": resposta.data.nome,
-        "compra": resposta.data.compra,
-        "venda": resposta.data.venda,
-        "fechoAnterior": resposta.data.fechoAnterior,
-        "dataAtualizacao": new Date(resposta.data.dataAtualizacao).toLocaleString('pt-BR', {timeZone: 'America/Sao_Paulo'}) 
-        //formatando a data pra voltar como: "08/07/2026, 11:02:00"
-        });
+// 4. CRUD USUÁRIOS - CRIAR (POST)
+app.post('/api/usuarios', async (req, res) => {
+    try {
+        const { nome, email, senha } = req.body;
+        
+        // CORREÇÃO: Usando a constante pool com async/await para ficar moderno e seguro
+        await pool.query(
+            'INSERT INTO usuarios (nome, email, senha) VALUES ($1, $2, $3)',
+            [nome, email, senha]
+        );
+        res.status(201).json({ mensagem: 'Usuário criado com sucesso.' });
     } catch(erro) {
-        res.status(500).json({erro: 'Erro ao consultar cotação: Euro €'})
-}
-});
+        res.status(500).json({ erro: 'Erro ao criar usuário: ' + erro.message });
+    }
+}); 
 
-// rota PESO ARGENTINO: 
-app.get('/api/cotacoes/argentino', async(req,res) => {
-    try{
-        const resposta = await axios.get('https://br.dolarapi.com/v1/cotacoes/ars');
-
-        res.json({
-        "moeda": resposta.data.moeda,
-        "nome": 'Peso Argentino',
-        "compra": resposta.data.compra,
-        "venda": resposta.data.venda,
-        "fechoAnterior": resposta.data.fechoAnterior,
-        "dataAtualizacao": new Date(resposta.data.dataAtualizacao).toLocaleString('pt-BR', {timeZone: 'America/Sao_Paulo'}) 
-        //formatando a data pra voltar como: "08/07/2026, 11:02:00"
-        });
+// 5. CRUD USUÁRIOS - ATUALIZAR (PUT)
+app.put('/api/usuarios/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { senha } = req.body;
+        
+        // CORREÇÃO: Usando a constante pool aqui também
+        await pool.query(
+            'UPDATE usuarios SET senha = $1 WHERE id = $2',
+            [senha, id]
+        );
+        res.status(200).json({ mensagem: 'Senha do usuário atualizada.' });
     } catch(erro) {
-        res.status(500).json({erro: 'Erro ao consultar cotação: Peso Argentino $'})
-}
+        res.status(500).json({ erro: 'Erro ao atualizar senha: ' + erro.message });
+    }
 });
 
-// rota PESO CHILENO: 
-app.get('/api/cotacoes/chileno', async(req,res) => {
-    try{
-        const resposta = await axios.get('https://br.dolarapi.com/v1/cotacoes/clp');
-
-        res.json({
-        "moeda": resposta.data.moeda,
-        "nome": 'Peso Chileno',
-        "compra": resposta.data.compra,
-        "venda": resposta.data.venda,
-        "fechoAnterior": resposta.data.fechoAnterior,
-        "dataAtualizacao": new Date(resposta.data.dataAtualizacao).toLocaleString('pt-BR', {timeZone: 'America/Sao_Paulo'}) 
-        //formatando a data pra voltar como: "08/07/2026, 11:02:00"
-        });
-    } catch(erro) {
-        res.status(500).json({erro: 'Erro ao consultar cotação: Peso Chileno $'})
-}
-});
-
-// rota PESO URUGUAIO: 
-app.get('/api/cotacoes/uruguaio', async(req,res) => {
-    try{
-        const resposta = await axios.get('https://br.dolarapi.com/v1/cotacoes/uyu');
-
-        res.json({
-        "moeda": resposta.data.moeda,
-        "nome": 'Peso Uruguaio',
-        "compra": resposta.data.compra,
-        "venda": resposta.data.venda,
-        "fechoAnterior": resposta.data.fechoAnterior,
-        "dataAtualizacao": new Date(resposta.data.dataAtualizacao).toLocaleString('pt-BR', {timeZone: 'America/Sao_Paulo'}) 
-        //formatando a data pra voltar como: "08/07/2026, 11:02:00"
-        });
-    } catch(erro) {
-        res.status(500).json({erro: 'Erro ao consultar cotação: Peso Uruguaio $'})
-}
-});
+// Inicialização do servidor
 app.listen(3000, () => {
     console.log("backend rodando na porta 3000");
-    
-})
+});
