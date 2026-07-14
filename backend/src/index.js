@@ -1,19 +1,27 @@
 const express = require('express');
 const cors = require('cors'); 
 const { Pool } = require('pg');
+require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
+
+// console.log('DEBUG ENV:', { //verificando se as variaveis de ambiente estao sendo carregadas
+//   host: process.env.HOST_DB,
+//   port: process.env.PORT_DB,
+//   user: process.env.USER_DB,
+//   password: process.env.PASSWORD_DB,
+//   database: process.env.DATABASE_DB
+// });
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-// Colocando as credenciais direto aqui para isolar o problema do .env
-const pool = new Pool({
-    host: 'localhost',
-    port: 5434,
-    user: 'cota-db',
-    password: 'cota-db123',
-    database: 'cota-db'
+const pool = new Pool({ 
+    host: process.env.HOST_DB,
+    port: process.env.PORT_DB,
+    user: process.env.USER_DB,
+    password: process.env.PASSWORD_DB,
+    database: process.env.DATABASE_DB
 });
 
 app.get('/teste-db', async (req, res) => {
@@ -61,16 +69,15 @@ app.post('/api/usuarios', async (req, res) => {
     try {
         const { nome, email, senha } = req.body;
         
-        // CORREÇÃO: Usando a constante pool com async/await para ficar moderno e seguro
         await pool.query(
-            'INSERT INTO usuarios (nome, email, senha) VALUES ($1, $2, $3)',
+            'INSERT INTO users (nome, email, senha) VALUES ($1, $2, $3)',
             [nome, email, senha]
         );
-        res.status(201).json({ mensagem: 'Usuário criado com sucesso.' });
+        res.status(201).json({ mensagem: 'Usuário criado.' });
     } catch(erro) {
         res.status(500).json({ erro: 'Erro ao criar usuário: ' + erro.message });
     }
-}); 
+});
 
 // 5. CRUD USUÁRIOS - ATUALIZAR (PUT)
 app.put('/api/usuarios/:id', async (req, res) => {
@@ -80,7 +87,7 @@ app.put('/api/usuarios/:id', async (req, res) => {
         
         // CORREÇÃO: Usando a constante pool aqui também
         await pool.query(
-            'UPDATE usuarios SET senha = $1 WHERE id = $2',
+            'UPDATE users SET senha = $1 WHERE id = $2',
             [senha, id]
         );
         res.status(200).json({ mensagem: 'Senha do usuário atualizada.' });
