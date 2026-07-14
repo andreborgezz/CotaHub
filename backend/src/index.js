@@ -4,6 +4,8 @@ const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 const axios = require('axios');
 require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
+const swaggerJsdoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
 
 // console.log('DEBUG ENV:', { //verificando se as variaveis de ambiente estao sendo carregadas
 //   host: process.env.HOST_DB,
@@ -26,6 +28,37 @@ const pool = new Pool({
     database: process.env.DATABASE_DB
 });
 
+//configuração do Swagger
+const swaggerOptions = {
+    definition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'CotaHub API',
+            version: '1.0.0',
+            description: 'API de cotações e autenticação de usuários'
+        },
+        servers: [
+            { url: 'http://localhost:3000' } // link base da url da api
+        ]
+    },
+    apis: ['./src/index.js'] // onde ele vai procurar os comentários das rotas
+};
+
+const swaggerDocs = swaggerJsdoc(swaggerOptions);
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
+/**
+ * @swagger
+ * /teste-db:
+ *   get:
+ *     summary: Testa a conexão com o banco de dados
+ *     responses:
+ *       200:
+ *         description: Conexão bem-sucedida
+ *       500:
+ *         description: Erro de conexão
+ */
 app.get('/teste-db', async (req, res) => {
     try {
         const resultado = await pool.query('SELECT NOW()');
@@ -39,8 +72,19 @@ app.listen(3000, () => {
     console.log("backend rodando na porta 3000");
 });
 
+/**
+ * @swagger
+ * /api/cotacoes/geral:
+ *   get:
+ *     summary: Obtém as cotações gerais
+ *     responses:
+ *       200:
+ *         description: Cotações obtidas com sucesso
+ *       500:
+ *         description: Erro ao consultar cotações
+ */
 // rota geral de cotações
-app.get('/api/cotacoes/general', async(req, res) => {
+app.get('/api/cotacoes/geral', async(req, res) => {
     try {
         const resposta = await axios.get('https://br.dolarapi.com/v1/cotacoes');
         res.json(resposta.data);
@@ -49,6 +93,17 @@ app.get('/api/cotacoes/general', async(req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/cotacoes/dolar:
+ *   get:
+ *     summary: Obtém a cotação do Dólar
+ *     responses:
+ *       200:
+ *         description: Cotação obtida com sucesso
+ *       500:
+ *         description: Erro ao consultar cotação
+ */
 // rota dolar
 app.get('/api/cotacoes/dolar', async(req, res) => {
     try {
@@ -66,6 +121,17 @@ app.get('/api/cotacoes/dolar', async(req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/cotacoes/euro:
+ *   get:
+ *     summary: Obtém a cotação do Euro
+ *     responses:
+ *       200:
+ *         description: Cotação obtida com sucesso
+ *       500:
+ *         description: Erro ao consultar cotação
+ */
 // rota EURO 
 app.get('/api/cotacoes/euro', async(req,res) => {
     try{
@@ -85,8 +151,19 @@ app.get('/api/cotacoes/euro', async(req,res) => {
 }
 });
 
+/**
+ * @swagger
+ * /api/cotacoes/peso-argentino:
+ *   get:
+ *     summary: Obtém a cotação do Peso Argentino
+ *     responses:
+ *       200:
+ *         description: Cotação obtida com sucesso
+ *       500:
+ *         description: Erro ao consultar cotação
+ */
 // rota PESO ARGENTINO: 
-app.get('/api/cotacoes/argentino', async(req,res) => {
+app.get('/api/cotacoes/peso-argentino', async(req,res) => {
     try{
         const resposta = await axios.get('https://br.dolarapi.com/v1/cotacoes/ars');
 
@@ -104,8 +181,19 @@ app.get('/api/cotacoes/argentino', async(req,res) => {
 }
 });
 
+/**
+ * @swagger
+ * /api/cotacoes/peso-chileno:
+ *   get:
+ *     summary: Obtém a cotação do Peso Chileno
+ *     responses:
+ *       200:
+ *         description: Cotação obtida com sucesso
+ *       500:
+ *         description: Erro ao consultar cotação
+ */
 // rota PESO CHILENO: 
-app.get('/api/cotacoes/chileno', async(req,res) => {
+app.get('/api/cotacoes/peso-chileno', async(req,res) => {
     try{
         const resposta = await axios.get('https://br.dolarapi.com/v1/cotacoes/clp');
 
@@ -123,8 +211,19 @@ app.get('/api/cotacoes/chileno', async(req,res) => {
 }
 });
 
-// rota PESO URUGUAIO: 
-app.get('/api/cotacoes/uruguaio', async(req,res) => {
+/**
+ * @swagger
+ * /api/cotacoes/peso-uruguaio:
+ *   get:
+ *     summary: Obtém a cotação do Peso Uruguaio
+ *     responses:
+ *       200:
+ *         description: Cotação obtida com sucesso
+ *       500:
+ *         description: Erro ao consultar cotação
+ */
+// rota PESO URUGUAIO:
+app.get('/api/cotacoes/peso-uruguaio', async(req,res) => {
     try{
         const resposta = await axios.get('https://br.dolarapi.com/v1/cotacoes/uyu');
 
@@ -142,6 +241,17 @@ app.get('/api/cotacoes/uruguaio', async(req,res) => {
 }
 });
 
+/**
+ * @swagger
+ * /api/usuarios:
+ *   post:
+ *     summary: Criação de usuários
+ *     responses:
+ *       201:
+ *         description: Usuário criado com sucesso
+ *       500:
+ *         description: Erro ao criar usuário
+ */
 // create usuario
 app.post('/api/usuarios', async (req, res) => {
     try {
@@ -159,6 +269,17 @@ app.post('/api/usuarios', async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/usuarios/{id}:
+ *   put:
+ *     summary: Atualização de usuários
+ *     responses:
+ *       200:
+ *         description: Usuário atualizado com sucesso
+ *       500:
+ *         description: Erro ao atualizar usuário
+ */
 // rota para atualizar usuario
 app.put('/api/usuarios/:id', async (req, res) => {
     try {
@@ -177,6 +298,19 @@ app.put('/api/usuarios/:id', async (req, res) => {
     }
 }); 
 
+/**
+ * @swagger
+ * /api/login:
+ *   post:
+ *     summary: Login de usuários
+ *     responses:
+ *       200:
+ *         description: Login realizado com sucesso
+ *       401:
+ *         description: Credenciais inválidas
+ *       500:
+ *         description: Erro ao fazer login
+ */
 // rota para login de usuário
 app.post('/api/login', async (req, res) => {
     try {
