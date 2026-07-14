@@ -6,6 +6,7 @@ const axios = require('axios');
 require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
+const jsonwebtoken = require('jsonwebtoken');
 
 // console.log('DEBUG ENV:', { //verificando se as variaveis de ambiente estao sendo carregadas
 //   host: process.env.HOST_DB,
@@ -27,6 +28,28 @@ const pool = new Pool({
     password: process.env.PASSWORD_DB,
     database: process.env.DATABASE_DB
 });
+
+function autenticar(req, res, next) {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+        return res.status(401).json({ erro: 'Token não fornecido.' });
+    }
+
+    const token = authHeader.split(' ')[1]; // formato: "Bearer TOKEN"
+
+    if (!token) {
+        return res.status(401).json({ erro: 'Token mal formatado.' });
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.usuario = decoded; // fica disponível nas próximas rotas
+        next();
+    } catch (erro) {
+        return res.status(401).json({ erro: 'Token inválido ou expirado.' });
+    }
+}
 
 //configuração do Swagger
 const swaggerOptions = {
@@ -332,7 +355,17 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ erro: 'E-mail ou senha inválidos.' });
         }
 
-        res.status(200).json({ mensagem: 'Login realizado com sucesso.', usuario: { id: usuario.id_user, nome: usuario.nome, email: usuario.email } });
+        const token = jwt.sign(
+            { id: usuario.id_user, email: usuario.email },
+            process.env.JWT_SECRET,
+            { expiresIn: '2h' }
+        );
+
+        res.status(200).json({
+            mensagem: 'Login realizado com sucesso.',
+            token,
+            usuario: { id: usuario.id_user, nome: usuario.nome, email: usuario.email }
+        });
     } catch(erro) {
         res.status(500).json({ erro: 'Erro ao fazer login: ' + erro.message });
     }
