@@ -19,15 +19,4 @@ Endpoints criados utilizando a api publica https://dolarapi.com/docs/ que dispon
 
 - Peso Uruguaio;
 
-Os endpoints devolvem os dados em json:
-
-[
-  {
-    "compra": 0,
-    "venda": 0,
-    "fechoAnterior": 0,
-    "nome": "string",
-    "moeda": "string",
-    "dataAtualizacao": "string"
-  }
-]
+Link Swagger: http://localhost:3000/api-docs/
