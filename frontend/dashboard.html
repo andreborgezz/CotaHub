@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CotaHub — Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="dashboard-page">
+
+  <!-- Header -->
+  <header class="topbar">
+    <div class="topbar-brand">COTAHUB</div>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-user">
+      <div class="user-dot"></div>
+      <span class="user-label">conectado como</span>
+      <strong id="user-name"></strong>
+    </div>
+    <button id="btn-logout" class="btn btn-ghost btn-sm">Sair</button>
+  </header>
+
+  <!-- Content -->
+  <main class="main-content">
+
+    <!-- Cotações -->
+    <div class="section-header">
+      <span class="section-title">Cotações ao vivo</span>
+      <div class="section-line"></div>
+      <div class="refresh-meta">
+        <span class="last-update" id="last-update"></span>
+        <button id="btn-refresh" class="btn btn-secondary btn-sm">Atualizar</button>
+      </div>
+    </div>
+
+    <div class="cards-grid">
+      <div class="quote-card" id="card-dolar"></div>
+      <div class="quote-card" id="card-euro"></div>
+      <div class="quote-card" id="card-peso-argentino"></div>
+      <div class="quote-card" id="card-peso-chileno"></div>
+      <div class="quote-card" id="card-peso-uruguaio"></div>
+    </div>
+
+    <!-- Segurança -->
+    <div class="section-header">
+      <span class="section-title">Segurança</span>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="security-box">
+      <h3>Alterar senha</h3>
+      <p>A nova senha será aplicada imediatamente.</p>
+
+      <div id="alert-senha" class="alert"></div>
+
+      <form id="form-senha" novalidate>
+        <div class="form-group">
+          <label for="nova-senha">Nova senha</label>
+          <input
+            type="password"
+            id="nova-senha"
+            name="nova-senha"
+            placeholder="Mínimo 6 caracteres"
+            autocomplete="new-password"
+          >
+        </div>
+        <div class="form-group">
+          <label for="confirma-senha">Confirmar senha</label>
+          <input
+            type="password"
+            id="confirma-senha"
+            name="confirma-senha"
+            placeholder="Repita a nova senha"
+            autocomplete="new-password"
+          >
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-secondary btn-change-pw">
+            <span id="btn-senha-spinner" class="spinner" style="display:none"></span>
+            <span id="btn-senha-text">Salvar nova senha</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

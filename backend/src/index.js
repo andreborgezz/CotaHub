@@ -6,7 +6,7 @@ const axios = require('axios');
 require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
-const jsonwebtoken = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 
 // console.log('DEBUG ENV:', { //verificando se as variaveis de ambiente estao sendo carregadas
 //   host: process.env.HOST_DB,
@@ -304,7 +304,7 @@ app.post('/api/usuarios', async (req, res) => {
  *         description: Erro ao atualizar usuário
  */
 // rota para atualizar usuario
-app.put('/api/usuarios/:id', async (req, res) => {
+app.put('/api/usuarios/:id', autenticar, async (req, res) => {
     try {
         const { id } = req.params;
         const { senha } = req.body;
